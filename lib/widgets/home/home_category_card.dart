@@ -11,12 +11,17 @@ class HomeCategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = constraints.biggest.shortestSide;
-        final iconBox = size * 0.42;
-        final iconSize = size * 0.25;
+        final shortest = constraints.biggest.shortestSide;
+        final isTight = constraints.maxHeight < 110;
+        final iconBox = (shortest * (isTight ? 0.30 : 0.36)).clamp(26.0, 40.0);
+        final iconSize = (iconBox * 0.58).clamp(15.0, 23.0);
+        final verticalPadding = isTight ? 4.0 : 8.0;
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          padding: EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: verticalPadding,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(22),
@@ -45,16 +50,21 @@ class HomeCategoryCard extends StatelessWidget {
                   size: iconSize,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                category.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
-                  color: const Color(0xFF2E2521),
+              SizedBox(height: isTight ? 4 : 6),
+              Expanded(
+                child: Center(
+                  child: Text(
+                    category.title,
+                    maxLines: isTight ? 1 : 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: isTight ? 10 : 11,
+                      fontWeight: FontWeight.w700,
+                      height: 1.15,
+                      color: const Color(0xFF2E2521),
+                    ),
+                  ),
                 ),
               ),
             ],

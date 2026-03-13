@@ -22,7 +22,7 @@ class PriceWidget extends StatelessWidget {
         Text(
           formatCurrency(price, 'VND'),
           style: TextStyle(
-            color: Color(0xFFE53935),
+            color: const Color(0xFFE53935),
             fontSize: compact ? 14 : 16,
             fontWeight: FontWeight.w800,
             height: 1.15,
@@ -32,7 +32,7 @@ class PriceWidget extends StatelessWidget {
         Text(
           formatCurrency(originalPrice, 'VND'),
           style: TextStyle(
-            color: Color(0xFF9E9E9E),
+            color: const Color(0xFF9E9E9E),
             fontSize: compact ? 11 : 12,
             decoration: TextDecoration.lineThrough,
           ),

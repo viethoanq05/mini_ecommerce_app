@@ -9,10 +9,7 @@ import 'product_image.dart';
 import 'sold_count.dart';
 
 class ProductCard extends StatefulWidget {
-  const ProductCard({
-    super.key,
-    required this.product,
-  });
+  const ProductCard({super.key, required this.product});
 
   final ProductItem product;
 
@@ -30,21 +27,21 @@ class _ProductCardState extends State<ProductCard> {
   double get _originalPrice => _product.price * 2;
 
   int get _discountPercent {
-    final percent =
-        ((_originalPrice - _product.price) / _originalPrice * 100).round();
+    final percent = ((_originalPrice - _product.price) / _originalPrice * 100)
+        .round();
     return percent.clamp(1, 90);
   }
 
   @override
   Widget build(BuildContext context) {
-    final hoverColor = const Color(0xFFFFF6ED);
+    const hoverColor = Color(0xFFFFF6ED);
 
     return AnimatedScale(
       scale: _isPressed
           ? 0.98
           : _isHovered
-              ? 1.01
-              : 1,
+          ? 1.01
+          : 1,
       duration: const Duration(milliseconds: 100),
       curve: Curves.easeOut,
       child: MouseRegion(
@@ -138,7 +135,8 @@ class _ProductCardState extends State<ProductCard> {
                                     customBorder: const CircleBorder(),
                                     onTap: () {
                                       setState(
-                                          () => _isFavorite = !_isFavorite);
+                                        () => _isFavorite = !_isFavorite,
+                                      );
                                     },
                                     child: Padding(
                                       padding: const EdgeInsets.all(6),
