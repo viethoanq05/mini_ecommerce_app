@@ -1,6 +1,6 @@
 {
-    "name": "mini_ecommerce_app",
-    "short_name": "mini_ecommerce_app",
+    "name": "product_detail_screen",
+    "short_name": "product_detail_screen",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
