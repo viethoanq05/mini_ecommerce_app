@@ -23,6 +23,14 @@ class CartItemCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    final size = MediaQuery.sizeOf(context);
+    final width = size.width;
+    final isCompact = width < 360;
+    final isLarge = width > 700;
+
+    final imageSize = isCompact ? 70.0 : (isLarge ? 100.0 : 80.0);
+    final hPadding = isCompact ? 8.0 : 12.0;
+
     return Dismissible(
       key: ValueKey('${item.product.id}_${item.size}_${item.color}'),
       direction: DismissDirection.endToStart,
@@ -53,7 +61,7 @@ class CartItemCard extends StatelessWidget {
         );
       },
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border(
@@ -71,12 +79,12 @@ class CartItemCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
                 item.product.imageUrl,
-                width: 80,
-                height: 80,
+                width: imageSize,
+                height: imageSize,
                 fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: isCompact ? 8 : 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,6 +95,7 @@ class CartItemCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
+                      fontSize: isCompact ? 13 : (isLarge ? 16 : 14),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -100,6 +109,7 @@ class CartItemCard extends StatelessWidget {
                       'Phân loại: ${item.size}, ${item.color}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.grey.shade600,
+                        fontSize: isCompact ? 10 : 12,
                       ),
                     ),
                   ),
@@ -107,11 +117,14 @@ class CartItemCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        formatCurrency(item.product.price, item.product.currency),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.bold,
+                      Flexible(
+                        child: Text(
+                          formatCurrency(item.product.price, item.product.currency),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: isCompact ? 14 : (isLarge ? 18 : 16),
+                          ),
                         ),
                       ),
                       Container(
@@ -125,19 +138,23 @@ class CartItemCard extends StatelessWidget {
                               icon: Icons.remove,
                               onPressed: onDecrement,
                               color: Colors.grey.shade600,
+                              isCompact: isCompact,
                             ),
                             Container(
-                              width: 32,
+                              width: isCompact ? 24 : 32,
                               alignment: Alignment.center,
                               child: Text(
                                 '${item.quantity}',
-                                style: theme.textTheme.bodyMedium,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontSize: isCompact ? 12 : 14,
+                                ),
                               ),
                             ),
                             _buildQuantityBtn(
                               icon: Icons.add,
                               onPressed: onIncrement,
                               color: colorScheme.primary,
+                              isCompact: isCompact,
                             ),
                           ],
                         ),
@@ -157,12 +174,13 @@ class CartItemCard extends StatelessWidget {
     required IconData icon,
     required VoidCallback onPressed,
     required Color color,
+    required bool isCompact,
   }) {
     return InkWell(
       onTap: onPressed,
       child: Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: Icon(icon, size: 16, color: color),
+        padding: EdgeInsets.all(isCompact ? 2.0 : 4.0),
+        child: Icon(icon, size: isCompact ? 14 : 16, color: color),
       ),
     );
   }
