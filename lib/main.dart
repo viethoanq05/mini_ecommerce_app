@@ -5,9 +5,19 @@ import 'providers/cart_provider.dart';
 import 'providers/wishlist_provider.dart';
 import 'screens/home_screen.dart';
 import 'theme/theme.dart';
+import 'controllers/currency_controller.dart';
+import 'controllers/user_controller.dart';
 
 void main() {
-  runApp(const MiniEcommerceApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CurrencyController()),
+        ChangeNotifierProvider(create: (_) => UserController()),
+      ],
+      child: const MiniEcommerceApp(),
+    ),
+  );
 }
 
 class MiniEcommerceApp extends StatelessWidget {
