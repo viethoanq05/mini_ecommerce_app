@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/cart_provider.dart';
 import '../utils/formatters.dart';
+import '../models/cart_item.dart';
 import '../widgets/cart/cart_item_card.dart';
 
 class CartScreen extends StatelessWidget {
@@ -56,7 +57,13 @@ class CartScreen extends StatelessWidget {
                         item: item,
                         onToggleSelection: () => cartProvider.toggleSelection(item),
                         onIncrement: () => cartProvider.updateQuantity(item, 1),
-                        onDecrement: () => cartProvider.updateQuantity(item, -1),
+                        onDecrement: () {
+                          if (item.quantity <= 1) {
+                            _showDeleteConfirmation(context, cartProvider, item);
+                          } else {
+                            cartProvider.updateQuantity(item, -1);
+                          }
+                        },
                         onRemove: () => cartProvider.removeItem(item),
                       );
                     },
@@ -65,6 +72,59 @@ class CartScreen extends StatelessWidget {
                 _buildBottomBar(context, cartProvider, horizontalPadding),
               ],
             ),
+    );
+  }
+
+  Future<void> _showDeleteConfirmation(
+    BuildContext context,
+    CartProvider provider,
+    CartItem item,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xóa sản phẩm?'),
+        content: const Text('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      provider.removeItem(item);
+    }
+  }
+
+  void _handlePurchase(BuildContext context, CartProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Đơn hàng thành công'),
+          ],
+        ),
+        content: const Text('Cảm ơn bạn đã mua hàng tại TH4 Mobile!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              provider.clearCart();
+              Navigator.pop(context);
+            },
+            child: const Text('Đóng'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -167,7 +227,7 @@ class CartScreen extends StatelessWidget {
             ),
             SizedBox(width: isSmall ? 8 : 16),
             ElevatedButton(
-              onPressed: provider.totalAmount > 0 ? () {} : null,
+              onPressed: provider.totalAmount > 0 ? () => _handlePurchase(context, provider) : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: colorScheme.primary,
                 foregroundColor: Colors.white,
