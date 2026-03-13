@@ -26,12 +26,18 @@ class HomeController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Mock data for UI components not in API
+      // Mock data for banners (as API doesn't provide them)
       banners = buildMockBanners();
-      categories = buildMockCategories();
       
-      // Real data from API
-      final allProducts = await _productService.getAll();
+      // Fetch real categories and products in parallel
+      final results = await Future.wait([
+        _productService.getAllCategories(),
+        _productService.getAll(),
+      ]);
+      
+      categories = results[0] as List<CategoryItem>;
+      final allProducts = results[1] as List<ProductItem>;
+      
       _currentPage = 0;
       _updateProductsList(allProducts);
       
@@ -53,7 +59,7 @@ class HomeController extends ChangeNotifier {
         end > allProducts.length ? allProducts.length : end
       );
       if (_currentPage == 0) {
-        products = sublist;
+        products = List.from(sublist);
       } else {
         products.addAll(sublist);
       }
@@ -69,7 +75,14 @@ class HomeController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final allProducts = await _productService.getAll();
+      final results = await Future.wait([
+        _productService.getAllCategories(),
+        _productService.getAll(),
+      ]);
+      
+      categories = results[0] as List<CategoryItem>;
+      final allProducts = results[1] as List<ProductItem>;
+      
       _currentPage = 0;
       _updateProductsList(allProducts);
       errorMessage = null;
@@ -88,9 +101,7 @@ class HomeController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Since FakeStore doesn't support real pagination well in some cases,
-      // we re-fetch (or would ideally have a better API) 
-      // but here we simulate from the loaded list for performance
+      // Re-fetching to simulate pagination from a static API
       final allProducts = await _productService.getAll();
       _currentPage++;
       _updateProductsList(allProducts);
