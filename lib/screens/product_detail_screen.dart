@@ -194,6 +194,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final wishlist = context.watch<WishlistProvider>();
     final isFavorite = wishlist.isFavorite(product.id);
     final isOutOfStock = _selectedStock <= 0;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
+    final bottomBarReservedSpace =
+        (screenWidth < 390 ? 130.0 : 110.0) + bottomSafeArea;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -305,7 +309,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             const _ShopPolicySection(),
             const SizedBox(height: 16),
             _RelatedProductsSection(related: product.relatedProducts),
-            const SizedBox(height: 110),
+            SizedBox(height: bottomBarReservedSpace),
           ],
         ),
       ),
@@ -391,7 +395,9 @@ class _VariationRow extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 2,
                     children: [
                       Text(
                         formatCurrency(selectedPrice, 'VND'),
@@ -400,7 +406,6 @@ class _VariationRow extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(width: 8),
                       Text(
                         selectedStock > 0
                             ? 'Con $selectedStock sp'
@@ -574,7 +579,11 @@ class _ReviewSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 'Danh gia san pham',
@@ -582,7 +591,6 @@ class _ReviewSection extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const Spacer(),
               Text(
                 '${product.averageRating.toStringAsFixed(1)} / 5',
                 style: theme.textTheme.titleSmall?.copyWith(
@@ -644,10 +652,12 @@ class _ReviewSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               const Text('Sap xep:'),
-              const SizedBox(width: 8),
               DropdownButton<_ReviewSortMode>(
                 value: sortMode,
                 underline: const SizedBox.shrink(),
@@ -897,25 +907,14 @@ class _BottomActionBar extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          _IconAction(
-            icon: Icons.chat_bubble_outline_rounded,
-            label: 'Chat',
-            onTap: () {},
-          ),
-          const SizedBox(width: 2),
-          _AnimatedCartBadge(
-            count: cartCount,
-            child: _AnimatedCartAction(
-              label: 'Gio hang',
-              onTap: () {},
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: SizedBox(
-              height: 46,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 390;
+          final buttonHeight = isCompact ? 44.0 : 46.0;
+
+          Widget addToCartButton({required double height}) {
+            return SizedBox(
+              height: height,
               child: OutlinedButton(
                 onPressed: isOutOfStock ? null : onAddToCart,
                 style: OutlinedButton.styleFrom(
@@ -929,16 +928,19 @@ class _BottomActionBar extends StatelessWidget {
                   ),
                 ),
                 child: const Text(
-                  'Them gio hang',
+                  'Thêm giỏ hàng',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SizedBox(
-              height: 46,
+            );
+          }
+
+          Widget buyNowButton({required double height}) {
+            return SizedBox(
+              height: height,
               child: FilledButton(
                 onPressed: isOutOfStock ? null : onBuyNow,
                 style: FilledButton.styleFrom(
@@ -949,16 +951,54 @@ class _BottomActionBar extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  isOutOfStock ? 'Het hang' : 'Mua ngay',
+                  isOutOfStock ? 'Hết hàng' : 'Mua ngay',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                   ),
                 ),
               ),
-            ),
-          ),
-        ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              SizedBox(
+                height: buttonHeight,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: _IconAction(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    label: 'Chat',
+                    onTap: () {},
+                  ),
+                ),
+              ),
+              const SizedBox(width: 2),
+              SizedBox(
+                height: buttonHeight,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: _AnimatedCartBadge(
+                    count: cartCount,
+                    child: _AnimatedCartAction(
+                      label: 'Giỏ hàng',
+                      onTap: () {},
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: addToCartButton(height: buttonHeight)),
+              const SizedBox(width: 8),
+              Expanded(child: buyNowButton(height: buttonHeight)),
+            ],
+          );
+        },
       ),
     );
   }
