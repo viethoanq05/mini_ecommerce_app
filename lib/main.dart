@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'controllers/product_detail_controller.dart';
 import 'providers/cart_provider.dart';
 import 'providers/wishlist_provider.dart';
 import 'screens/home_screen.dart';
@@ -18,6 +19,7 @@ class MiniEcommerceApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => ProductDetailController()),
         ChangeNotifierProvider(create: (_) => WishlistProvider()..load()),
       ],
       child: MaterialApp(
