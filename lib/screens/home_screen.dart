@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../controllers/home_controller.dart';
 import '../controllers/product_detail_controller.dart';
+import '../controllers/cart_provider.dart';
 import '../models/product_item.dart';
 import 'product_detail_screen.dart';
 import '../widgets/home/home_banner_carousel.dart';
@@ -12,6 +13,7 @@ import '../widgets/home/home_category_card.dart';
 import '../widgets/home/home_product_card.dart';
 import '../widgets/home/home_search_bar.dart';
 import '../widgets/home/home_section_header.dart';
+import 'cart_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -223,17 +225,26 @@ class _HomeScreenState extends State<HomeScreen> {
               actions: [
                 Padding(
                   padding: EdgeInsets.only(right: horizontalPadding),
-                  child: Badge.count(
-                    count: 3,
-                    backgroundColor: const Color(0xFFE03131),
-                    textColor: Colors.white,
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.shopping_cart_outlined,
-                        color: _isAppBarCollapsed
-                            ? Colors.white
-                            : colorScheme.primary,
+                  child: Consumer<CartProvider>(
+                    builder: (context, cart, child) => Badge.count(
+                      count: cart.itemCount,
+                      backgroundColor: const Color(0xFFE03131),
+                      textColor: Colors.white,
+                      child: IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CartScreen(),
+                            ),
+                          );
+                        },
+                        icon: Icon(
+                          Icons.shopping_cart_outlined,
+                          color: _isAppBarCollapsed
+                              ? Colors.white
+                              : colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),

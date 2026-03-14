@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mini_ecommerce_app/main.dart';
@@ -27,7 +27,7 @@ void main() {
 
     expect(find.text('Danh mục nổi bật'), findsOneWidget);
     expect(find.text('FLASH SALE'), findsOneWidget);
-    expect(find.text('3'), findsOneWidget);
+    expect(find.byIcon(Icons.shopping_cart_outlined), findsOneWidget);
 
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -520));
     await tester.pump();
