@@ -75,6 +75,11 @@ class CheckoutProvider extends ChangeNotifier {
 
   List<Address> get availableAddresses => List.unmodifiable(_availableAddresses);
 
+    void addNewAddress(Address address) {
+      _availableAddresses.add(address);
+      notifyListeners();
+    }
+
   void updateFromCartProvider(CartProvider cartProvider) {
     // CartProvider already stores CartItem models for the checkout flow.
     _cartItems = cartProvider.items.toList();

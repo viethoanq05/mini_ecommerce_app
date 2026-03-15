@@ -77,6 +77,83 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.add_location_alt),
+                      label: const Text('Thêm địa chỉ mới'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFFE03131),
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () async {
+                        final newAddress = await showDialog<Address>(
+                          context: context,
+                          builder: (context) {
+                            final nameController = TextEditingController();
+                            final phoneController = TextEditingController();
+                            final addressLineController = TextEditingController();
+                            final cityController = TextEditingController();
+                            return AlertDialog(
+                              title: const Text('Thêm địa chỉ mới'),
+                              content: SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    TextField(
+                                      controller: nameController,
+                                      decoration: const InputDecoration(labelText: 'Tên người nhận'),
+                                    ),
+                                    TextField(
+                                      controller: phoneController,
+                                      decoration: const InputDecoration(labelText: 'Số điện thoại'),
+                                      keyboardType: TextInputType.phone,
+                                    ),
+                                    TextField(
+                                      controller: addressLineController,
+                                      decoration: const InputDecoration(labelText: 'Địa chỉ'),
+                                    ),
+                                    TextField(
+                                      controller: cityController,
+                                      decoration: const InputDecoration(labelText: 'Thành phố'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Hủy'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    if (nameController.text.isEmpty || phoneController.text.isEmpty || addressLineController.text.isEmpty || cityController.text.isEmpty) {
+                                      return;
+                                    }
+                                    final address = Address(
+                                      id: 'addr_${DateTime.now().millisecondsSinceEpoch}',
+                                      name: nameController.text,
+                                      phone: phoneController.text,
+                                      addressLine: addressLineController.text,
+                                      city: cityController.text,
+                                    );
+                                    Navigator.of(context).pop(address);
+                                  },
+                                  child: const Text('Thêm'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        if (newAddress != null) {
+                          checkoutProvider.addNewAddress(newAddress);
+                          Navigator.of(context).pop(newAddress);
+                        }
+                      },
+                    ),
+                  ),
+                ),
             ],
           ),
         );
