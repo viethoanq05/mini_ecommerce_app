@@ -7,6 +7,8 @@ import '../providers/cart_provider.dart';
 import '../providers/wishlist_provider.dart';
 import '../utils/formatters.dart';
 import '../widgets/product_description.dart';
+import 'cart_screen.dart';
+import 'checkout_screen.dart';
 import '../widgets/product_image_slider.dart';
 import '../widgets/product_info.dart';
 import '../widgets/variation_bottom_sheet.dart';
@@ -167,22 +169,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             _selectedVoucher = voucher;
           });
 
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text(
-                confirmLabel == 'Mua ngay'
-                    ? 'Dat hang thanh cong'
-                    : 'Them vao gio hang thanh cong',
+          if (confirmLabel == 'Mua ngay') {
+            // Navigate to checkout after adding to cart
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const CheckoutScreen(),
               ),
-              backgroundColor: const Color(0xFF2B8A3E),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+            );
+          } else {
+            messenger.showSnackBar(
+              SnackBar(
+                content: const Text('Them vao gio hang thanh cong'),
+                backgroundColor: const Color(0xFF2B8A3E),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                margin: const EdgeInsets.all(16),
+                duration: const Duration(seconds: 2),
               ),
-              margin: const EdgeInsets.all(16),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+            );
+          }
         },
       ),
     );
@@ -909,7 +916,13 @@ class _BottomActionBar extends StatelessWidget {
             count: cartCount,
             child: _AnimatedCartAction(
               label: 'Gio hang',
-              onTap: () {},
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const CartScreen(),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(width: 12),

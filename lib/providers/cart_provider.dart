@@ -1,23 +1,9 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/cart_item.dart';
 import '../models/product.dart';
 
-/// Đại diện một mặt hàng trong giỏ hàng
-class CartItem {
-  CartItem({
-    required this.product,
-    required this.size,
-    required this.color,
-    required this.quantity,
-  });
-
-  final Product product;
-  final String size;
-  final String color;
-  int quantity;
-}
-
-/// Quản lý trạng thái giỏ hàng toàn ứng dụng với ChangeNotifier
+/// Quản lý trạng thái giỏ hàng toàn ứng dụng với [ChangeNotifier].
 class CartProvider extends ChangeNotifier {
   final List<CartItem> _items = [];
 
@@ -34,7 +20,8 @@ class CartProvider extends ChangeNotifier {
     required int quantity,
   }) {
     final idx = _items.indexWhere(
-      (e) => e.product.id == product.id && e.size == size && e.color == color,
+      (e) =>
+          e.productId == product.id && e.size == size && e.color == color,
     );
 
     if (idx >= 0) {
@@ -42,19 +29,55 @@ class CartProvider extends ChangeNotifier {
     } else {
       _items.add(
         CartItem(
-          product: product,
+          productId: product.id,
+          name: product.name,
+          price: product.priceOf(size, color),
+          quantity: quantity,
+          image: product.images.first,
           size: size,
           color: color,
-          quantity: quantity,
         ),
       );
     }
     notifyListeners();
   }
 
+  /// Cập nhật số lượng cho một mặt hàng trong giỏ.
+  void updateQuantity({
+    required String productId,
+    required String size,
+    required String color,
+    required int quantity,
+  }) {
+    final idx = _items.indexWhere((e) =>
+        e.productId == productId && e.size == size && e.color == color);
+    if (idx >= 0) {
+      if (quantity <= 0) {
+        _items.removeAt(idx);
+      } else {
+        _items[idx] = CartItem(
+          productId: _items[idx].productId,
+          name: _items[idx].name,
+          price: _items[idx].price,
+          quantity: quantity,
+          image: _items[idx].image,
+          size: _items[idx].size,
+          color: _items[idx].color,
+        );
+      }
+      notifyListeners();
+    }
+  }
+
   /// Xoá toàn bộ dòng sản phẩm theo productId
   void removeFromCart(String productId) {
-    _items.removeWhere((e) => e.product.id == productId);
+    _items.removeWhere((e) => e.productId == productId);
+    notifyListeners();
+  }
+
+  /// Xoá toàn bộ giỏ hàng
+  void clearCart() {
+    _items.clear();
     notifyListeners();
   }
 }

@@ -7,6 +7,7 @@ import '../models/category_item.dart';
 import '../models/home_initial_data.dart';
 import '../models/home_product_page.dart';
 import '../models/product_item.dart';
+import '../screens/cart_screen.dart';
 import '../services/home_repository.dart';
 import '../services/mock_home_data.dart';
 import '../services/mock_home_repository.dart';
@@ -371,7 +372,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     backgroundColor: const Color(0xFFE03131),
                     textColor: Colors.white,
                     child: IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const CartScreen(),
+                          ),
+                        );
+                      },
                       icon: Icon(
                         Icons.shopping_cart_outlined,
                         color: _isAppBarCollapsed
