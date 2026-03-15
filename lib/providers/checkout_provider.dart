@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/address.dart';
 import '../models/cart_item.dart';
@@ -13,12 +16,19 @@ enum PaymentMethod { cod, online }
 
 class CheckoutProvider extends ChangeNotifier {
   CheckoutProvider({OrderService? orderService})
-      : _orderService = orderService ?? OrderService();
+      : _orderService = orderService ?? OrderService() {
+    _loadOrderHistory();
+  }
+
+  static const _orderHistoryKey = 'order_history';
 
   final OrderService _orderService;
 
   /// Cart items are synced from [CartProvider] via [updateFromCartProvider].
   List<CartItem> _cartItems = [];
+
+  final List<Order> _orderHistory = [];
+  List<Order> get orderHistory => List.unmodifiable(_orderHistory);
 
   List<CartItem> get cartItems => List.unmodifiable(_cartItems);
 
@@ -198,6 +208,10 @@ class CheckoutProvider extends ChangeNotifier {
       // Clear cart after successful order
       cartProvider.clearCart();
 
+      // Save to local order history for demo.
+      _orderHistory.insert(0, order);
+      await _saveOrderHistory();
+
       return order;
     } catch (e) {
       _errorMessage = e.toString();
@@ -205,6 +219,41 @@ class CheckoutProvider extends ChangeNotifier {
     } finally {
       _isPlacingOrder = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> _loadOrderHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_orderHistoryKey);
+      if (raw == null || raw.isEmpty) {
+        return;
+      }
+
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) {
+        return;
+      }
+
+      _orderHistory
+        ..clear()
+        ..addAll(decoded
+            .whereType<Map<String, dynamic>>()
+            .map(Order.fromJson)
+            .toList());
+      notifyListeners();
+    } catch (_) {
+      // Ignore errors (cache corruption etc.)
+    }
+  }
+
+  Future<void> _saveOrderHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encoded = jsonEncode(_orderHistory.map((e) => e.toJson()).toList());
+      await prefs.setString(_orderHistoryKey, encoded);
+    } catch (_) {
+      // Ignore errors.
     }
   }
 }

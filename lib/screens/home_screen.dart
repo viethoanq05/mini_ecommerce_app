@@ -8,6 +8,7 @@ import '../models/home_initial_data.dart';
 import '../models/home_product_page.dart';
 import '../models/product_item.dart';
 import '../screens/cart_screen.dart';
+import '../screens/order_history_screen.dart';
 import '../services/home_repository.dart';
 import '../services/mock_home_data.dart';
 import '../services/mock_home_repository.dart';
@@ -365,6 +366,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               actions: [
+                IconButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const OrderHistoryScreen(),
+                      ),
+                    );
+                  },
+                  icon: Icon(
+                    Icons.history_rounded,
+                    color: _isAppBarCollapsed ? Colors.white : colorScheme.primary,
+                  ),
+                  tooltip: 'Lịch sử đơn hàng',
+                ),
                 Padding(
                   padding: EdgeInsets.only(right: horizontalPadding),
                   child: Badge.count(

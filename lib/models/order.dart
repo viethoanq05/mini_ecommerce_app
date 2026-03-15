@@ -1,5 +1,7 @@
 import 'order_item.dart';
 
+enum OrderStatus { pending, delivering, delivered, canceled }
+
 class Order {
   Order({
     required this.id,
@@ -13,6 +15,7 @@ class Order {
     required this.discount,
     required this.total,
     required this.createdAt,
+    required this.status,
   });
 
   final String id;
@@ -26,8 +29,15 @@ class Order {
   final double discount;
   final double total;
   final DateTime createdAt;
+  final OrderStatus status;
 
   factory Order.fromJson(Map<String, dynamic> json) {
+    final statusRaw = json['status']?.toString();
+    final status = OrderStatus.values.firstWhere(
+      (s) => s.name == statusRaw,
+      orElse: () => OrderStatus.pending,
+    );
+
     return Order(
       id: json['id']?.toString() ?? '',
       userId: json['user_id']?.toString() ?? '',
@@ -48,6 +58,24 @@ class Order {
       total: (json['total'] as num?)?.toDouble() ?? 0,
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
+      status: status,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'address_id': addressId,
+      'payment_method': paymentMethod,
+      'shipping_method': shippingMethod,
+      'items': items.map((e) => e.toJson()).toList(),
+      'subtotal': subtotal,
+      'shipping_fee': shippingFee,
+      'discount': discount,
+      'total': total,
+      'created_at': createdAt.toIso8601String(),
+      'status': status.name,
+    };
   }
 }

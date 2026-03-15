@@ -46,6 +46,7 @@ class OrderService {
         discount: discount,
         total: total,
         createdAt: DateTime.now(),
+        status: OrderStatus.pending,
       );
     }
 
