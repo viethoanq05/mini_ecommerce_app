@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../models/product.dart';
-import '../providers/cart_provider.dart';
+import '../models/product_item.dart';
+import '../controllers/cart_provider.dart';
 import '../providers/wishlist_provider.dart';
 import '../utils/formatters.dart';
 import '../widgets/product_description.dart';
@@ -154,12 +155,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         onConfirm: (size, color, quantity, voucher) {
           Navigator.pop(context);
 
-          cartProvider.addToCart(
-            product,
-            size: size,
-            color: color,
-            quantity: quantity,
+          final cartItem = ProductItem(
+            id: product.id,
+            name: product.name,
+            imageUrl: product.images.isNotEmpty ? product.images.first : '',
+            price: _selectedPrice,
+            currency: 'VND',
+            soldCount: 0,
+            tags: const <String>[],
           );
+          for (var i = 0; i < quantity; i++) {
+            cartProvider.addItem(cartItem, size: size, color: color);
+          }
 
           setState(() {
             _selectedSize = size;
@@ -190,7 +197,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cartCount = context.watch<CartProvider>().cartCount;
+    final cartCount = context.watch<CartProvider>().itemCount;
     final wishlist = context.watch<WishlistProvider>();
     final isFavorite = wishlist.isFavorite(product.id);
     final isOutOfStock = _selectedStock <= 0;
@@ -447,8 +454,11 @@ class _VoucherSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.confirmation_number_outlined,
-                  size: 20, color: Colors.grey.shade600),
+              Icon(
+                Icons.confirmation_number_outlined,
+                size: 20,
+                color: Colors.grey.shade600,
+              ),
               const SizedBox(width: 10),
               Text(
                 'Voucher cua shop',
@@ -907,10 +917,7 @@ class _BottomActionBar extends StatelessWidget {
           const SizedBox(width: 2),
           _AnimatedCartBadge(
             count: cartCount,
-            child: _AnimatedCartAction(
-              label: 'Gio hang',
-              onTap: () {},
-            ),
+            child: _AnimatedCartAction(label: 'Gio hang', onTap: () {}),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1123,11 +1130,7 @@ class _AnimatedCartActionState extends State<_AnimatedCartAction> {
               duration: const Duration(milliseconds: 170),
               curve: Curves.easeOutBack,
               scale: _active ? 1.2 : 1,
-              child: Icon(
-                Icons.shopping_cart_outlined,
-                size: 22,
-                color: color,
-              ),
+              child: Icon(Icons.shopping_cart_outlined, size: 22, color: color),
             ),
             const SizedBox(height: 2),
             AnimatedDefaultTextStyle(
