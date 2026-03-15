@@ -178,11 +178,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
 
       if (!mounted) return;
-      navigator.pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => OrderSuccessScreen(order: order),
-        ),
-      );
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('Đặt hàng thành công'),
+            content: const Text('Đơn hàng của bạn đã được đặt thành công!'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  navigator.popUntil((route) => route.isFirst);
+                },
+                child: const Text('Về trang chủ'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  navigator.push(
+                    MaterialPageRoute(
+                      builder: (_) => OrderSuccessScreen(order: order),
+                    ),
+                  );
+                },
+                child: const Text('Xem chi tiết đơn hàng'),
+              ),
+            ],
+          ),
+        );
     } catch (e) {
       final message = checkoutProvider.errorMessage ?? e.toString();
       if (!mounted) return;
