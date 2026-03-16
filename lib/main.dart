@@ -19,7 +19,7 @@ class MiniEcommerceApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()..load()),
         ChangeNotifierProvider(create: (_) => CheckoutProvider()),
         ChangeNotifierProvider(create: (_) => ProductDetailController()),
         ChangeNotifierProvider(create: (_) => WishlistProvider()..load()),
