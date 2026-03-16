@@ -8,12 +8,13 @@ import '../controllers/product_detail_controller.dart';
 import '../controllers/cart_provider.dart';
 import '../models/product_item.dart';
 import 'product_detail_screen.dart';
+import '../screens/cart_screen.dart';
+import '../screens/order_history_screen.dart';
 import '../widgets/home/home_banner_carousel.dart';
 import '../widgets/home/home_category_card.dart';
 import '../widgets/home/home_product_card.dart';
 import '../widgets/home/home_search_bar.dart';
 import '../widgets/home/home_section_header.dart';
-import 'cart_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -32,6 +33,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool _isAppBarCollapsed = false;
   int _currentBanner = 0;
+  String _searchQuery = '';
+  String? _selectedCategoryTitle;
 
   @override
   void initState() {
@@ -116,6 +119,42 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _onSearchChanged(String value) {
+    setState(() {
+      _searchQuery = value.trim().toLowerCase();
+    });
+  }
+
+  void _onCategoryTap(String title) {
+    setState(() {
+      _selectedCategoryTitle = _selectedCategoryTitle == title ? null : title;
+    });
+  }
+
+  List<ProductItem> _buildFilteredProducts() {
+    final query = _searchQuery;
+    final selectedCategory = _selectedCategoryTitle?.toLowerCase();
+
+    return _controller.products.where((product) {
+      final matchQuery =
+          query.isEmpty ||
+          product.name.toLowerCase().contains(query) ||
+          product.tags.any((tag) => tag.toLowerCase().contains(query));
+
+      final matchCategory =
+          selectedCategory == null ||
+          selectedCategory.isEmpty ||
+          product.name.toLowerCase().contains(selectedCategory) ||
+          product.tags.any((tag) {
+            final tagLower = tag.toLowerCase();
+            return tagLower.contains(selectedCategory) ||
+                selectedCategory.contains(tagLower);
+          });
+
+      return matchQuery && matchCategory;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
@@ -145,6 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
         : width < 360
         ? 0.5
         : 0.54;
+    final filteredProducts = _buildFilteredProducts();
 
     if (_controller.isInitialLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -219,10 +259,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: HomeSearchBar(
                     isCollapsed: _isAppBarCollapsed,
                     height: searchHeight,
+                    query: _searchQuery,
+                    onChanged: _onSearchChanged,
+                    onSubmitted: _onSearchChanged,
                   ),
                 ),
               ),
               actions: [
+                IconButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const OrderHistoryScreen(),
+                      ),
+                    );
+                  },
+                  icon: Icon(
+                    Icons.history_rounded,
+                    color: _isAppBarCollapsed
+                        ? Colors.white
+                        : colorScheme.primary,
+                  ),
+                  tooltip: 'Lịch sử đơn hàng',
+                ),
                 Padding(
                   padding: EdgeInsets.only(right: horizontalPadding),
                   child: Consumer<CartProvider>(
@@ -306,14 +365,45 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                     itemCount: _controller.categories.length,
                     itemBuilder: (context, index) {
+                      final category = _controller.categories[index];
                       return HomeCategoryCard(
-                        category: _controller.categories[index],
+                        category: category,
+                        isSelected: _selectedCategoryTitle == category.title,
+                        onTap: () => _onCategoryTap(category.title),
                       );
                     },
                   ),
                 ),
               ),
             ),
+            if (_selectedCategoryTitle != null || _searchQuery.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    0,
+                    horizontalPadding,
+                    6,
+                  ),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (_selectedCategoryTitle != null)
+                        InputChip(
+                          label: Text('Danh mục: $_selectedCategoryTitle'),
+                          onDeleted: () =>
+                              _onCategoryTap(_selectedCategoryTitle!),
+                        ),
+                      if (_searchQuery.isNotEmpty)
+                        InputChip(
+                          label: Text('Tìm kiếm: $_searchQuery'),
+                          onDeleted: () => _onSearchChanged(''),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
@@ -331,24 +421,38 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-              sliver: SliverGrid(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return HomeProductCard(
-                    product: _controller.products[index],
-                    isCompact: width < 360,
-                    onTap: () => _openProductDetail(
-                      context,
-                      _controller.products[index],
+              sliver: filteredProducts.isEmpty
+                  ? SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 22),
+                        child: Center(
+                          child: Text(
+                            'Không tìm thấy sản phẩm phù hợp.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : SliverGrid(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        return HomeProductCard(
+                          product: filteredProducts[index],
+                          isCompact: width < 360,
+                          onTap: () => _openProductDetail(
+                            context,
+                            filteredProducts[index],
+                          ),
+                        );
+                      }, childCount: filteredProducts.length),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: productColumns,
+                        mainAxisSpacing: productSpacing,
+                        crossAxisSpacing: productSpacing,
+                        childAspectRatio: productAspectRatio,
+                      ),
                     ),
-                  );
-                }, childCount: _controller.products.length),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: productColumns,
-                  mainAxisSpacing: productSpacing,
-                  crossAxisSpacing: productSpacing,
-                  childAspectRatio: productAspectRatio,
-                ),
-              ),
             ),
             SliverToBoxAdapter(
               child: Padding(

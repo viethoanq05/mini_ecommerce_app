@@ -8,6 +8,8 @@ import '../controllers/cart_provider.dart';
 import '../providers/wishlist_provider.dart';
 import '../utils/formatters.dart';
 import '../widgets/product_description.dart';
+import 'cart_screen.dart';
+import 'checkout_screen.dart';
 import '../widgets/product_image_slider.dart';
 import '../widgets/product_info.dart';
 import '../widgets/variation_bottom_sheet.dart';
@@ -174,22 +176,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             _selectedVoucher = voucher;
           });
 
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text(
-                confirmLabel == 'Mua ngay'
-                    ? 'Dat hang thanh cong'
-                    : 'Them vao gio hang thanh cong',
+          if (confirmLabel == 'Mua ngay') {
+            // Navigate to checkout after adding to cart
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const CheckoutScreen()));
+          } else {
+            messenger.showSnackBar(
+              SnackBar(
+                content: const Text('Them vao gio hang thanh cong'),
+                backgroundColor: const Color(0xFF2B8A3E),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                margin: const EdgeInsets.all(16),
+                duration: const Duration(seconds: 2),
               ),
-              backgroundColor: const Color(0xFF2B8A3E),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(16),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+            );
+          }
         },
       ),
     );
@@ -826,42 +831,57 @@ class _RelatedProductsSection extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 206,
+            height: 228,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: related.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
               itemBuilder: (context, index) {
                 final item = related[index];
                 return SizedBox(
-                  width: 130,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          item.imageUrl,
-                          height: 120,
-                          width: 130,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        item.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        formatCurrency(item.price, 'VND'),
-                        style: const TextStyle(
-                          color: Color(0xFFE03131),
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
+                  width: 142,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final imageHeight = (constraints.maxHeight * 0.56).clamp(
+                        112.0,
+                        132.0,
+                      );
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              item.imageUrl,
+                              height: imageHeight,
+                              width: constraints.maxWidth,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const Spacer(),
+                                Text(
+                                  formatCurrency(item.price, 'VND'),
+                                  style: const TextStyle(
+                                    color: Color(0xFFE03131),
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 );
               },
@@ -889,6 +909,83 @@ class _BottomActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isNarrow = MediaQuery.sizeOf(context).width < 380;
+
+    final leftActions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _IconAction(
+          icon: Icons.chat_bubble_outline_rounded,
+          label: 'Chat',
+          onTap: () {},
+        ),
+        const SizedBox(width: 2),
+        _AnimatedCartBadge(
+          count: cartCount,
+          child: _AnimatedCartAction(
+            label: 'Gio hang',
+            onTap: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const CartScreen()));
+            },
+          ),
+        ),
+      ],
+    );
+
+    final actionButtons = Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 46,
+            child: OutlinedButton(
+              onPressed: isOutOfStock ? null : onAddToCart,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: theme.colorScheme.primary,
+                side: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Them gio hang',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SizedBox(
+            height: 46,
+            child: FilledButton(
+              onPressed: isOutOfStock ? null : onBuyNow,
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                disabledBackgroundColor: Colors.grey.shade400,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  isOutOfStock ? 'Het hang' : 'Mua ngay',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -909,62 +1006,22 @@ class _BottomActionBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _IconAction(
-            icon: Icons.chat_bubble_outline_rounded,
-            label: 'Chat',
-            onTap: () {},
-          ),
-          const SizedBox(width: 2),
-          _AnimatedCartBadge(
-            count: cartCount,
-            child: _AnimatedCartAction(label: 'Gio hang', onTap: () {}),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: SizedBox(
-              height: 46,
-              child: OutlinedButton(
-                onPressed: isOutOfStock ? null : onAddToCart,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.primary,
-                  side: BorderSide(
-                    color: theme.colorScheme.primary,
-                    width: 1.5,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Text(
-                  'Them gio hang',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                ),
+          if (isNarrow)
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(alignment: Alignment.centerLeft, child: leftActions),
+                  const SizedBox(height: 8),
+                  actionButtons,
+                ],
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SizedBox(
-              height: 46,
-              child: FilledButton(
-                onPressed: isOutOfStock ? null : onBuyNow,
-                style: FilledButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  disabledBackgroundColor: Colors.grey.shade400,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: Text(
-                  isOutOfStock ? 'Het hang' : 'Mua ngay',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-          ),
+            )
+          else ...[
+            leftActions,
+            const SizedBox(width: 12),
+            Expanded(child: actionButtons),
+          ],
         ],
       ),
     );

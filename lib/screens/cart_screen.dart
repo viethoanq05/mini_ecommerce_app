@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../controllers/cart_provider.dart';
 import '../utils/formatters.dart';
 import '../models/cart_item.dart';
 import '../widgets/cart/cart_item_card.dart';
+import 'checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -30,10 +32,15 @@ class CartScreen extends StatelessWidget {
         actions: [
           if (cartProvider.items.isNotEmpty)
             Padding(
-              padding: EdgeInsets.only(right: isLarge ? horizontalPadding - 8 : 8),
+              padding: EdgeInsets.only(
+                right: isLarge ? horizontalPadding - 8 : 8,
+              ),
               child: TextButton(
                 onPressed: () => cartProvider.clearCart(),
-                child: const Text('Xóa tất cả', style: TextStyle(color: Colors.red)),
+                child: const Text(
+                  'Xóa tất cả',
+                  style: TextStyle(color: Colors.red),
+                ),
               ),
             ),
         ],
@@ -55,11 +62,16 @@ class CartScreen extends StatelessWidget {
                       final item = cartProvider.items[index];
                       return CartItemCard(
                         item: item,
-                        onToggleSelection: () => cartProvider.toggleSelection(item),
+                        onToggleSelection: () =>
+                            cartProvider.toggleSelection(item),
                         onIncrement: () => cartProvider.updateQuantity(item, 1),
                         onDecrement: () {
                           if (item.quantity <= 1) {
-                            _showDeleteConfirmation(context, cartProvider, item);
+                            _showDeleteConfirmation(
+                              context,
+                              cartProvider,
+                              item,
+                            );
                           } else {
                             cartProvider.updateQuantity(item, -1);
                           }
@@ -84,7 +96,9 @@ class CartScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Xóa sản phẩm?'),
-        content: const Text('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?'),
+        content: const Text(
+          'Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -103,29 +117,10 @@ class CartScreen extends StatelessWidget {
     }
   }
 
-  void _handlePurchase(BuildContext context, CartProvider provider) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green),
-            SizedBox(width: 8),
-            Text('Đơn hàng thành công'),
-          ],
-        ),
-        content: const Text('Cảm ơn bạn đã mua hàng tại TH4 Mobile!'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              provider.clearCart();
-              Navigator.pop(context);
-            },
-            child: const Text('Đóng'),
-          ),
-        ],
-      ),
-    );
+  void _handlePurchase(BuildContext context) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const CheckoutScreen()));
   }
 
   Widget _buildEmptyCart(BuildContext context) {
@@ -134,7 +129,11 @@ class CartScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey.shade300),
+          Icon(
+            Icons.shopping_cart_outlined,
+            size: 80,
+            color: Colors.grey.shade300,
+          ),
           const SizedBox(height: 16),
           const Text(
             'Giỏ hàng của bạn đang trống',
@@ -166,7 +165,39 @@ class CartScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final width = MediaQuery.sizeOf(context).width;
-    final isSmall = width < 360;
+    final isSmall = width < 430;
+
+    final summary = Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('Tổng thanh toán:', style: TextStyle(fontSize: isSmall ? 11 : 13)),
+        Text(
+          formatCurrency(provider.totalAmount, 'VND'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: colorScheme.primary,
+            fontWeight: FontWeight.bold,
+            fontSize: isSmall ? 14 : null,
+          ),
+        ),
+      ],
+    );
+
+    final purchaseButton = ElevatedButton(
+      onPressed: provider.totalAmount > 0
+          ? () => _handlePurchase(context)
+          : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: colorScheme.primary,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSmall ? 12 : 24,
+          vertical: isSmall ? 8 : 12,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: Text('Mua hàng', style: TextStyle(fontSize: isSmall ? 13 : 15)),
+    );
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -187,65 +218,55 @@ class CartScreen extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Row(
-          children: [
-            Row(
-              children: [
-                SizedBox(
-                  width: isSmall ? 24 : 40,
-                  height: isSmall ? 24 : 40,
-                  child: Checkbox(
-                    value: provider.isSelectAll,
-                    onChanged: (val) => provider.toggleSelectAll(val ?? false),
-                    activeColor: colorScheme.primary,
+        child: isSmall
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          value: provider.isSelectAll,
+                          onChanged: (val) =>
+                              provider.toggleSelectAll(val ?? false),
+                          activeColor: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text('Tất cả', style: TextStyle(fontSize: 12)),
+                      const Spacer(),
+                      summary,
+                    ],
                   ),
-                ),
-                Text(
-                  'Tất cả',
-                  style: TextStyle(fontSize: isSmall ? 12 : 14),
-                ),
-              ],
-            ),
-            const Spacer(),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Tổng thanh toán:',
-                  style: TextStyle(fontSize: isSmall ? 11 : 13),
-                ),
-                Text(
-                  formatCurrency(provider.totalAmount, 'VND'),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: isSmall ? 14 : null,
+                  const SizedBox(height: 10),
+                  SizedBox(width: double.infinity, child: purchaseButton),
+                ],
+              )
+            : Row(
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Checkbox(
+                          value: provider.isSelectAll,
+                          onChanged: (val) =>
+                              provider.toggleSelectAll(val ?? false),
+                          activeColor: colorScheme.primary,
+                        ),
+                      ),
+                      const Text('Tất cả', style: TextStyle(fontSize: 14)),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            SizedBox(width: isSmall ? 8 : 16),
-            ElevatedButton(
-              onPressed: provider.totalAmount > 0 ? () => _handlePurchase(context, provider) : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(
-                  horizontal: isSmall ? 12 : 24,
-                  vertical: isSmall ? 8 : 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                  const Spacer(),
+                  summary,
+                  const SizedBox(width: 16),
+                  purchaseButton,
+                ],
               ),
-              child: Text(
-                'Mua hàng',
-                style: TextStyle(fontSize: isSmall ? 13 : 15),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

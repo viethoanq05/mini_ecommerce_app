@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'controllers/cart_provider.dart';
 import 'controllers/product_detail_controller.dart';
+import 'providers/checkout_provider.dart';
 import 'providers/wishlist_provider.dart';
 import 'screens/home_screen.dart';
 import 'theme/theme.dart';
@@ -19,6 +20,7 @@ class MiniEcommerceApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => CheckoutProvider()),
         ChangeNotifierProvider(create: (_) => ProductDetailController()),
         ChangeNotifierProvider(create: (_) => WishlistProvider()..load()),
       ],

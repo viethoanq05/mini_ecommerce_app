@@ -25,11 +25,11 @@ class CartItemCard extends StatelessWidget {
 
     final size = MediaQuery.sizeOf(context);
     final width = size.width;
-    final isCompact = width < 360;
+    final isCompact = width < 420;
     final isLarge = width > 700;
 
-    final imageSize = isCompact ? 70.0 : (isLarge ? 100.0 : 80.0);
-    final hPadding = isCompact ? 8.0 : 12.0;
+    final imageSize = isCompact ? 64.0 : (isLarge ? 100.0 : 80.0);
+    final hPadding = isCompact ? 6.0 : 12.0;
 
     return Dismissible(
       key: ValueKey('${item.product.id}_${item.size}_${item.color}'),
@@ -46,7 +46,9 @@ class CartItemCard extends StatelessWidget {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Xóa sản phẩm?'),
-            content: const Text('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?'),
+            content: const Text(
+              'Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -64,16 +66,20 @@ class CartItemCard extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
-          border: Border(
-            bottom: BorderSide(color: Colors.grey.shade200),
-          ),
+          border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
         ),
         child: Row(
           children: [
-            Checkbox(
-              value: item.isSelected,
-              onChanged: (_) => onToggleSelection(),
-              activeColor: colorScheme.primary,
+            SizedBox(
+              width: isCompact ? 26 : 38,
+              height: isCompact ? 26 : 38,
+              child: Checkbox(
+                value: item.isSelected,
+                onChanged: (_) => onToggleSelection(),
+                activeColor: colorScheme.primary,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
             ),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -100,7 +106,10 @@ class CartItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(4),
@@ -114,25 +123,15 @@ class CartItemCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          formatCurrency(item.product.price, item.product.currency),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: isCompact ? 14 : (isLarge ? 18 : 16),
-                          ),
-                        ),
-                      ),
-                      Container(
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final quantityBox = Container(
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey.shade300),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             _buildQuantityBtn(
                               icon: Icons.remove,
@@ -158,8 +157,45 @@ class CartItemCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                      );
+
+                      final priceText = Text(
+                        formatCurrency(
+                          item.product.price,
+                          item.product.currency,
+                        ),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: isCompact ? 14 : (isLarge ? 18 : 16),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      );
+
+                      if (constraints.maxWidth < 170) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            priceText,
+                            const SizedBox(height: 6),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: quantityBox,
+                            ),
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: priceText),
+                          const SizedBox(width: 8),
+                          quantityBox,
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
